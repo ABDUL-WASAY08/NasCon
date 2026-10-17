@@ -9,6 +9,7 @@ import '../features/club_profile/club_profile_screen.dart';
 import '../features/fixtures/fixtures_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/match_detail/match_detail_screen.dart';
+import '../features/notifications/notifications_screen.dart';
 import '../features/orders/checkout_screen.dart';
 import '../features/orders/order_receipt_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
@@ -33,6 +34,7 @@ abstract final class AppRoutes {
   static const String standings = '/standings';
   static const String store = '/store';
   static const String profile = '/profile';
+  static const String notifications = '/notifications';
 
   static const String syncStatus = '/sync-status';
   static const String cart = '/cart';
@@ -167,9 +169,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/store/product/:productId',
-        builder: (context, state) => ProductDetailScreen(
-          productId: state.pathParameters['productId']!,
-        ),
+        builder: (context, state) =>
+            ProductDetailScreen(productId: state.pathParameters['productId']!),
       ),
       GoRoute(
         path: AppRoutes.cart,
@@ -178,6 +179,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.checkout,
         builder: (context, state) => const CheckoutScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: '/orders/:orderId/receipt',

@@ -49,7 +49,8 @@ class HomeScreen extends ConsumerWidget {
             ),
             children: [
               DashboardHeader(
-                user: user ??
+                user:
+                    user ??
                     const User(
                       id: 'guest',
                       fullName: 'Guest',
@@ -58,11 +59,8 @@ class HomeScreen extends ConsumerWidget {
                     ),
                 greeting: 'Hello, ${_firstName(user)} 👋',
                 subtitle: 'Here is your league overview',
-                notificationCount: 0,
-                onNotifications: () => _notify(
-                  context,
-                  'You have no new notifications.',
-                ),
+                notificationCount: 2,
+                onNotifications: () => context.push('/notifications'),
                 onSettings: () => context.go('/profile'),
                 onAvatarTap: () => context.go('/profile'),
               ),
@@ -130,12 +128,6 @@ class HomeScreen extends ConsumerWidget {
     final name = user?.fullName.trim() ?? '';
     if (name.isEmpty) return 'there';
     return name.split(RegExp(r'\s+')).first;
-  }
-
-  static void _notify(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }
 

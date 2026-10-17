@@ -15,6 +15,7 @@ abstract interface class OrdersRepository {
   Future<CheckoutResult> placeOrder({
     required List<CartItem> items,
     required String idempotencyKey,
+    String? promoCode,
   });
 
   Future<Order> order(String orderId);

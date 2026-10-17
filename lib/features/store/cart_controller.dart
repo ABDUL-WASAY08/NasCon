@@ -138,10 +138,20 @@ final cartProvider = StateNotifierProvider<CartController, List<CartItem>>(
   (ref) => CartController(ref.watch(localDatabaseProvider)),
 );
 
+/// Mock campaign code shared by the cart and checkout review.
+final cartPromoCodeProvider = StateProvider<String?>((ref) => null);
+
 /// Live totals for the current cart.
-final cartTotalsProvider = Provider<CartTotals>(
-  (ref) => CartTotals.fromItems(ref.watch(cartProvider), taxRate: 0.05),
-);
+final cartTotalsProvider = Provider<CartTotals>((ref) {
+  final items = ref.watch(cartProvider);
+  final promoCode = ref.watch(cartPromoCodeProvider);
+  final subtotal = items.fold<double>(
+    0,
+    (total, item) => total + item.lineTotal,
+  );
+  final discount = promoCode == 'NASCON10' ? subtotal * .10 : 0.0;
+  return CartTotals.fromItems(items, taxRate: 0.05, discount: discount);
+});
 
 /// Number of individual units in the cart (drives the badge).
 final cartCountProvider = Provider<int>(

@@ -23,7 +23,10 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
       _ProductDetailScreenState();
 }
 
+typedef ProductDetailsScreen = ProductDetailScreen;
+
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  late Future<Cached<Product>> _productFuture;
   ProductVariant? _variant;
   int _quantity = 1;
   bool _adding = false;
@@ -35,6 +38,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   Product? _product;
+
+  @override
+  void initState() {
+    super.initState();
+    _productFuture = ref
+        .read(storeRepositoryProvider)
+        .product(widget.productId);
+  }
 
   int? get _availableStock {
     final product = _product;
@@ -103,7 +114,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Product'),
       body: FutureBuilder<Cached<Product>>(
-        future: ref.read(storeRepositoryProvider).product(widget.productId),
+        future: _productFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const LoadingView(message: 'Loading product…');
@@ -129,21 +140,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               AppSpacing.xl,
               AppSpacing.lg,
               AppSpacing.xl,
-              AppSpacing.xxxl,
+              AppSpacing.xxl,
             ),
             children: [
-              Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  color: scheme.primary.withValues(alpha: 0.08),
-                ),
-                child: Icon(
-                  Icons.checkroom_rounded,
-                  size: 64,
-                  color: scheme.primary,
-                ),
-              ),
+              _ProductGallery(product: product),
               const SizedBox(height: AppSpacing.xl),
               Text(product.name, style: AppTextStyles.h2),
               const SizedBox(height: AppSpacing.sm),
@@ -220,12 +220,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ),
               ],
               const SizedBox(height: AppSpacing.xxl),
-              CustomButton(
-                text: 'Add to Cart',
-                icon: Icons.add_shopping_cart_rounded,
-                isLoading: _adding,
-                onPressed: _canAdd ? _addToCart : null,
-              ),
               if (_blockingReason != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(
@@ -239,6 +233,236 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ],
           );
         },
+      ),
+      bottomNavigationBar: FutureBuilder<Cached<Product>>(
+        future: _productFuture,
+        builder: (context, snapshot) {
+          final product = snapshot.data?.data;
+          if (product == null) return const SizedBox.shrink();
+          _product ??= product;
+          return SafeArea(
+            top: false,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.md,
+                AppSpacing.xl,
+                AppSpacing.md,
+              ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).shadowColor.withValues(alpha: .06),
+                    blurRadius: 18,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TOTAL',
+                          style: AppTextStyles.caption.copyWith(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${product.currency} '
+                          '${((_effectiveVariant?.price ?? product.price) * _quantity).toStringAsFixed(0)}',
+                          style: AppTextStyles.price.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    flex: 2,
+                    child: CustomButton(
+                      text: 'Add to Cart',
+                      icon: Icons.add_shopping_cart_rounded,
+                      isLoading: _adding,
+                      onPressed: _canAdd ? _addToCart : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ProductGallery extends StatefulWidget {
+  const _ProductGallery({required this.product});
+
+  final Product product;
+
+  @override
+  State<_ProductGallery> createState() => _ProductGalleryState();
+}
+
+class _ProductGalleryState extends State<_ProductGallery> {
+  final PageController _controller = PageController();
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: SizedBox(
+            height: 265,
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: 3,
+              onPageChanged: (page) => setState(() => _page = page),
+              itemBuilder: (context, index) {
+                final colors = [
+                  const Color(0xFFEAE8FF),
+                  const Color(0xFFE5F7F2),
+                  const Color(0xFFFFF1E7),
+                ];
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [colors[index], scheme.surface],
+                        ),
+                      ),
+                    ),
+                    if (widget.product.imageUrl case final url?)
+                      Image.network(
+                        url,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _GalleryArtwork(
+                              product: widget.product,
+                              index: index,
+                            ),
+                      )
+                    else
+                      _GalleryArtwork(product: widget.product, index: index),
+                    Positioned(
+                      left: AppSpacing.lg,
+                      top: AppSpacing.lg,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.surface.withValues(alpha: .88),
+                          borderRadius: BorderRadius.circular(AppRadius.pill),
+                        ),
+                        child: Text(
+                          widget.product.category ?? 'NaSCon Collection',
+                          style: AppTextStyles.caption.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            3,
+            (index) => AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              width: _page == index ? 22 : 7,
+              height: 7,
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              decoration: BoxDecoration(
+                color: _page == index
+                    ? scheme.primary
+                    : scheme.onSurface.withValues(alpha: .2),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GalleryArtwork extends StatelessWidget {
+  const _GalleryArtwork({required this.product, required this.index});
+
+  final Product product;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final icon = (product.category ?? '').toLowerCase().contains('access')
+        ? Icons.sports_rounded
+        : index == 1
+        ? Icons.auto_awesome_rounded
+        : Icons.checkroom_rounded;
+    return Center(
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Container(
+          key: ValueKey(index),
+          width: index == 1 ? 142 : 156,
+          height: index == 1 ? 174 : 190,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: index == 2
+                  ? AppColors.brandGradient
+                  : AppColors.primaryGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(index == 1 ? 32 : 22),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withValues(alpha: .22),
+                blurRadius: 28,
+                offset: const Offset(0, 14),
+              ),
+            ],
+          ),
+          child: Icon(icon, color: Colors.white, size: 66),
+        ),
       ),
     );
   }

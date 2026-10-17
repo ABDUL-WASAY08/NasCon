@@ -44,9 +44,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     try {
       final result = await ref
           .read(ordersRepositoryProvider)
-          .placeOrder(items: items, idempotencyKey: _idempotencyKey);
+          .placeOrder(
+            items: items,
+            idempotencyKey: _idempotencyKey,
+            promoCode: ref.read(cartPromoCodeProvider),
+          );
 
       await ref.read(cartProvider.notifier).clear();
+      ref.read(cartPromoCodeProvider.notifier).state = null;
       if (!mounted) return;
       context.pushReplacement('/orders/${result.order.id}/receipt');
     } catch (error) {

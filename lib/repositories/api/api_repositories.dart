@@ -169,10 +169,7 @@ class ApiFixturesRepository implements FixturesRepository {
       fetch: () async {
         final list = await _client.getList(
           ApiRoutes.fixtures,
-          query: {
-            'league_id': ?leagueId,
-            'status': filter.name,
-          },
+          query: {'league_id': ?leagueId, 'status': filter.name},
         );
         return list.map(Fixture.fromJson).toList();
       },
@@ -225,9 +222,10 @@ class ApiFixturesRepository implements FixturesRepository {
   }
 
   @override
-  Future<ScoringConfig> scoringConfig(String matchId) async => ScoringConfig.fromJson(
-    await _client.getObject(ApiRoutes.matchScoringConfig(matchId)),
-  );
+  Future<ScoringConfig> scoringConfig(String matchId) async =>
+      ScoringConfig.fromJson(
+        await _client.getObject(ApiRoutes.matchScoringConfig(matchId)),
+      );
 }
 
 class ApiStandingsRepository implements StandingsRepository {
@@ -358,10 +356,7 @@ class ApiStoreRepository implements StoreRepository {
       fetch: () async {
         final list = await _client.getList(
           ApiRoutes.products,
-          query: {
-            'category': ?category,
-            'q': ?query,
-          },
+          query: {'category': ?category, 'q': ?query},
         );
         return list.map(Product.fromJson).toList();
       },
@@ -402,10 +397,16 @@ class ApiOrdersRepository implements OrdersRepository {
   Future<CheckoutResult> placeOrder({
     required List<CartItem> items,
     required String idempotencyKey,
+    String? promoCode,
   }) async {
+    final body = <String, Object>{
+      'items': items.map((item) => item.toJson()).toList(),
+    };
+    if (promoCode != null) body['promo_code'] = promoCode;
+
     final json = await _client.post(
       ApiRoutes.orders,
-      body: {'items': items.map((item) => item.toJson()).toList()},
+      body: body,
       idempotencyKey: idempotencyKey,
     );
     final order = Order.fromJson(

@@ -175,9 +175,9 @@ class MockFixturesRepository implements FixturesRepository {
         );
       }
       return Cached(
-        data: CachedPayload.decodeList(cached.payload)
-            .map(Fixture.fromJson)
-            .toList(),
+        data: CachedPayload.decodeList(
+          cached.payload,
+        ).map(Fixture.fromJson).toList(),
         fromCache: true,
         updatedAt: cached.updatedAt,
       );
@@ -260,9 +260,9 @@ class MockFixturesRepository implements FixturesRepository {
       final cached = await _db.getCache(LocalDatabase.fixturesBucket, cacheKey);
       if (cached != null) {
         return Cached(
-          data: CachedPayload.decodeList(cached.payload)
-              .map(MatchEvent.fromJson)
-              .toList(),
+          data: CachedPayload.decodeList(
+            cached.payload,
+          ).map(MatchEvent.fromJson).toList(),
           fromCache: true,
           updatedAt: cached.updatedAt,
         );
@@ -373,7 +373,10 @@ class MockStandingsRepository implements StandingsRepository {
     final cacheKey = 'table::$resolved';
 
     if (_backend.offline) {
-      final cached = await _db.getCache(LocalDatabase.standingsBucket, cacheKey);
+      final cached = await _db.getCache(
+        LocalDatabase.standingsBucket,
+        cacheKey,
+      );
       if (cached == null) {
         throw const AppException(
           'You are offline and this table has not been cached.',
@@ -381,9 +384,9 @@ class MockStandingsRepository implements StandingsRepository {
         );
       }
       return Cached(
-        data: CachedPayload.decodeList(cached.payload)
-            .map(StandingsRow.fromJson)
-            .toList(),
+        data: CachedPayload.decodeList(
+          cached.payload,
+        ).map(StandingsRow.fromJson).toList(),
         fromCache: true,
         updatedAt: cached.updatedAt,
       );
@@ -478,9 +481,9 @@ class MockClubsRepository implements ClubsRepository {
         );
       }
       return Cached(
-        data: CachedPayload.decodeList(cached.payload)
-            .map(Player.fromJson)
-            .toList(),
+        data: CachedPayload.decodeList(
+          cached.payload,
+        ).map(Player.fromJson).toList(),
         fromCache: true,
         updatedAt: cached.updatedAt,
       );
@@ -529,7 +532,9 @@ class MockClubsRepository implements ClubsRepository {
     final current = _players[index];
     final updated = switch (action.type) {
       RosterActionType.add => current.copyWith(clubId: action.clubId),
-      RosterActionType.transfer => current.copyWith(clubId: action.destinationClubId ?? action.clubId),
+      RosterActionType.transfer => current.copyWith(
+        clubId: action.destinationClubId ?? action.clubId,
+      ),
       RosterActionType.loan => current.copyWith(
         loanClubId: action.destinationClubId,
       ),
@@ -588,9 +593,9 @@ class MockStoreRepository implements StoreRepository {
         );
       }
       return Cached(
-        data: CachedPayload.decodeList(cached.payload)
-            .map(Product.fromJson)
-            .toList(),
+        data: CachedPayload.decodeList(
+          cached.payload,
+        ).map(Product.fromJson).toList(),
         fromCache: true,
         updatedAt: cached.updatedAt,
       );
@@ -660,6 +665,7 @@ class MockOrdersRepository implements OrdersRepository {
   Future<CheckoutResult> placeOrder({
     required List<CartItem> items,
     required String idempotencyKey,
+    String? promoCode,
   }) async {
     await _backend.tick();
     _backend.requireOnline();
@@ -699,7 +705,13 @@ class MockOrdersRepository implements OrdersRepository {
       );
     }
 
-    final totals = CartTotals.fromItems(items, taxRate: 0.05);
+    final subtotal = items.fold<double>(0, (sum, item) => sum + item.lineTotal);
+    final discount = promoCode == 'NASCON10' ? subtotal * .1 : 0.0;
+    final totals = CartTotals.fromItems(
+      items,
+      taxRate: 0.05,
+      discount: discount,
+    );
     final now = DateTime.now();
     final orderId =
         'ord_${now.millisecondsSinceEpoch.toRadixString(36)}${items.length}';

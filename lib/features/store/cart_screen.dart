@@ -10,11 +10,33 @@ import '../../../models/cart_totals.dart';
 import 'cart_controller.dart';
 
 /// Screen 06c — Cart.
-class CartScreen extends ConsumerWidget {
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CartScreen> createState() => _CartScreenState();
+}
+
+typedef CartAndCheckoutScreen = CartScreen;
+
+class _CartScreenState extends ConsumerState<CartScreen> {
+  final TextEditingController _promoController = TextEditingController();
+  String? _promoError;
+
+  @override
+  void dispose() {
+    _promoController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ref = this.ref;
+    ref.listen(cartProvider, (previous, next) {
+      if (previous?.isNotEmpty == true && next.isEmpty) {
+        ref.read(cartPromoCodeProvider.notifier).state = null;
+      }
+    });
     final items = ref.watch(cartProvider);
     final totals = ref.watch(cartTotalsProvider);
 
@@ -38,14 +60,19 @@ class CartScreen extends ConsumerWidget {
                       AppSpacing.xl,
                       AppSpacing.lg,
                     ),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) => _CartTile(
-                      item: items[index],
-                      onQuantityChanged: (lineId, quantity) =>
-                          _setQuantity(context, ref, lineId, quantity),
-                      onRemove: (lineId) =>
-                          ref.read(cartProvider.notifier).remove(lineId),
-                    ),
+                    itemCount: items.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == items.length) {
+                        return _promoBox(totals.subtotal);
+                      }
+                      return _CartTile(
+                        item: items[index],
+                        onQuantityChanged: (lineId, quantity) =>
+                            _setQuantity(context, ref, lineId, quantity),
+                        onRemove: (lineId) =>
+                            ref.read(cartProvider.notifier).remove(lineId),
+                      );
+                    },
                   ),
                 ),
                 _TotalsBar(
@@ -55,6 +82,102 @@ class CartScreen extends ConsumerWidget {
               ],
             ),
     );
+  }
+
+  Widget _promoBox(double subtotal) {
+    final appliedCode = ref.watch(cartPromoCodeProvider);
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.local_offer_outlined,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Promo code', style: AppTextStyles.bodyMedium),
+                    Text(
+                      'Try NASCON10 for 10% off',
+                      style: AppTextStyles.helper.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (appliedCode != null)
+                TextButton(
+                  onPressed: () {
+                    ref.read(cartPromoCodeProvider.notifier).state = null;
+                    _promoController.clear();
+                    setState(() => _promoError = null);
+                  },
+                  child: const Text('Remove'),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _promoController,
+                  textCapitalization: TextCapitalization.characters,
+                  enabled: appliedCode == null,
+                  decoration: InputDecoration(
+                    hintText: 'Enter promo code',
+                    errorText: _promoError,
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              FilledButton(
+                onPressed: appliedCode == null
+                    ? () {
+                        final code = _promoController.text.trim().toUpperCase();
+                        if (code == 'NASCON10' && subtotal > 0) {
+                          ref.read(cartPromoCodeProvider.notifier).state = code;
+                          setState(() => _promoError = null);
+                          FocusScope.of(context).unfocus();
+                        } else {
+                          setState(
+                            () => _promoError = subtotal <= 0
+                                ? 'Add an item before applying a code.'
+                                : 'That promo code is not valid.',
+                          );
+                        }
+                      }
+                    : null,
+                child: Text(appliedCode == null ? 'Apply' : 'Applied'),
+              ),
+            ],
+          ),
+          if (appliedCode != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              '$appliedCode applied · ${(subtotal * .1).toStringAsFixed(2)} $itemsCurrency',
+              style: AppTextStyles.helper.copyWith(
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String get itemsCurrency {
+    final items = ref.read(cartProvider);
+    return items.isEmpty ? 'PKR' : items.first.currency;
   }
 
   Future<void> _setQuantity(
@@ -169,7 +292,9 @@ class _CartTile extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Maximum available quantity reached.',
-              style: AppTextStyles.helper.copyWith(color: scheme.onSurfaceVariant),
+              style: AppTextStyles.helper.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ],
         ],
