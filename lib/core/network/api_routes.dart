@@ -1,10 +1,9 @@
 /// Centralised API route table.
 ///
-/// **Every route below is `PENDING BACKEND CONTRACT`.** No endpoint has been
-/// specified by the NaSCon backend team yet, so these paths are a proposal, not
-/// a verified contract — see `mobile/FRONTEND_BACKEND_CONTRACT.md`. The default
-/// build runs against mock repositories and never calls these.
+/// Routes implemented by the NaSCon API. See `mobile/FRONTEND_BACKEND_CONTRACT.md`
+/// for endpoints that still require backend work.
 abstract final class ApiRoutes {
+  static const String register = '/auth/register';
   static const String login = '/auth/login';
   static const String logout = '/auth/logout';
   static const String me = '/auth/me';

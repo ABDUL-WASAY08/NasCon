@@ -29,20 +29,13 @@ import '../standings_repository.dart';
 import '../store_repository.dart';
 
 // =============================================================================
-// PRODUCTION REPOSITORIES
+// API REPOSITORIES
 //
-// ⚠️  PENDING BACKEND CONTRACT.
-//
-// The NaSCon backend does not exist yet, so **every route referenced here is a
-// proposal**, listed in `mobile/FRONTEND_BACKEND_CONTRACT.md` as
-// "PENDING BACKEND CONTRACT". These classes are genuine integration points —
-// they build real requests and parse real responses — but they are not
-// connected to a live service and the default build (`USE_MOCK_BACKEND=true`)
-// never instantiates them.
-//
-// Nothing here fabricates success: transport/parse failures surface as
-// `AppException`, and read caches fall back only when the network genuinely
-// fails.
+// These repositories call the Express API when USE_MOCK_BACKEND=false. Auth and
+// selected catalogue routes exist; other paths are tracked as pending in
+// mobile/FRONTEND_BACKEND_CONTRACT.md. The default build remains mock-backed.
+// Transport and parse failures surface as AppException; cached reads fall back
+// only when the network genuinely fails.
 // =============================================================================
 
 /// Runs [fetch], caching the encoded result and falling back to the cache when
@@ -84,6 +77,31 @@ class ApiAuthRepository implements AuthRepository {
 
   final ApiClient _client;
   final SessionStore _store;
+
+  @override
+  Future<Session> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    final json = await _client.post(
+      ApiRoutes.register,
+      body: {
+        'full_name': fullName.trim(),
+        'email': email.trim(),
+        'password': password,
+      },
+    );
+    final session = Session.fromJson(json);
+    if (session.accessToken.isEmpty) {
+      throw const AppException(
+        'The registration response was missing an access token.',
+        kind: AppErrorKind.server,
+      );
+    }
+    await _store.saveSession(session);
+    return session;
+  }
 
   @override
   Future<Session> signIn({

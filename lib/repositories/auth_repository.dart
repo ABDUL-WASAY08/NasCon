@@ -3,6 +3,13 @@ import '../models/user.dart';
 
 /// Authentication and session lifecycle.
 abstract interface class AuthRepository {
+  /// Creates an account and persists the resulting authenticated session.
+  Future<Session> register({
+    required String fullName,
+    required String email,
+    required String password,
+  });
+
   /// Exchanges credentials for a session. Throws an `AppException` on invalid
   /// credentials, network failure or a malformed response.
   Future<Session> signIn({required String email, required String password});

@@ -34,15 +34,14 @@ class AppConfig {
   final String apiBaseUrl;
 
   /// When `true` the app resolves every repository to its **mock**
-  /// implementation. This is the default so the app is fully usable before the
-  /// backend exists. It is surfaced in the UI so mock data is never mistaken
-  /// for live data.
+  /// implementation. This is the default for local development. It is surfaced
+  /// in the UI so mock data is never mistaken for live data.
   final bool useMockBackend;
 
   final Duration connectTimeout;
   final Duration receiveTimeout;
 
-  static const String _defaultApiBaseUrl = 'http://10.0.2.2:8080/v1';
+  static const String _defaultApiBaseUrl = 'http://10.0.2.2:5000/api';
 
   factory AppConfig.fromEnvironment() => AppConfig(
     apiBaseUrl: const String.fromEnvironment(

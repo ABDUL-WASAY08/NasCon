@@ -192,6 +192,20 @@ class SessionController extends StateNotifier<AsyncValue<Session?>> {
     return session;
   }
 
+  Future<Session> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    final session = await _auth.register(
+      fullName: fullName,
+      email: email,
+      password: password,
+    );
+    state = AsyncValue<Session?>.data(session);
+    return session;
+  }
+
   /// Clears local credentials and returns to a signed-out state. Used by the
   /// profile screen's sign-out and by the API layer on a 401.
   Future<void> signOut() async {

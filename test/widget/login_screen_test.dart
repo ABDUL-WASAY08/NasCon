@@ -25,14 +25,31 @@ void main() {
     await tester.pumpWidget(wrapScreen(const LoginScreen(), container));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.byType(TextFormField).first,
-      'not-an-email',
-    );
+    await tester.enterText(find.byType(TextFormField).first, 'not-an-email');
     await tester.tap(find.text('Sign In'));
     await tester.pumpAndSettle();
 
     expect(find.text('Enter a valid email address'), findsOneWidget);
+  });
+
+  testWidgets('registration exposes and validates account fields', (
+    tester,
+  ) async {
+    final container = testContainer();
+    setTestViewport(tester);
+    await tester.pumpWidget(wrapScreen(const LoginScreen(), container));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('New to NaSCon? Create an account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Full name'), findsOneWidget);
+    await tester.tap(find.text('Create Account').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter at least 2 characters.'), findsOneWidget);
+    expect(find.text('Email is required'), findsOneWidget);
+    expect(find.text('Use at least 8 characters.'), findsOneWidget);
   });
 
   testWidgets('password visibility can be toggled', (tester) async {

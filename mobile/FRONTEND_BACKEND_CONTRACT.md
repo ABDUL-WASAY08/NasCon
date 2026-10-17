@@ -1,12 +1,11 @@
 # Frontend ↔ Backend Contract — NaSCon '26 Mobile
 
-**Status of every route below: `PENDING BACKEND CONTRACT`.**
+**Status:** The repository includes an Express API. Authentication and several
+catalogue routes are implemented; other routes in this contract remain pending.
 
-No NaSCon API documentation, OpenAPI schema, or backend source was available in
-this repository. Every path in `lib/core/network/api_routes.dart` is a **proposal
-written by the frontend** — it is *not* a verified contract, and no request has
-ever been made against a live service. The app therefore runs on **mock
-repositories** by default (`USE_MOCK_BACKEND=true`).
+The API is documented in [`../backend/README.md`](../backend/README.md). No live
+deployment credentials are configured in this repository. The app therefore
+runs on **mock repositories** by default (`USE_MOCK_BACKEND=true`).
 
 Nothing in this app fabricates success: with mock mode off and no backend, calls
 surface as `AppException` and the UI shows a real error state.
@@ -20,7 +19,8 @@ Legend — **Status**: `Mock` = implemented and tested against mock repositories
 
 | Feature | Screen | Operation | Method + route | Request | Response | Auth / role | Error / conflict | Offline | Status |
 |---|---|---|---|---|---|---|---|---|---|
-| Sign in | `/login` | Exchange credentials | `POST /auth/login` **[proposed]** | `{ email, password }` | `{ access_token, refresh_token?, expires_at?, user{ id, full_name, email, role, club_id?, league_id? } }` | None | `401` → "Incorrect email or password" (mapped to `invalidCredentials`, **not** session-expired) | Not allowed — checkout-style action requires connectivity | Mock / PENDING |
+| Register | `/login` | Create viewer account | `POST /auth/register` | `{ full_name, email, password }` | `{ access_token, expires_at, user{ id, full_name, email, role } }` | None | `409` duplicate email; `400` invalid input | Not allowed | API + mock |
+| Sign in | `/login` | Exchange credentials | `POST /api/auth/login` | `{ email, password }` | `{ access_token, expires_at, user{ id, full_name, email, role, club_id?, league_id? } }` | None | `401` → "Incorrect email or password" (mapped to `invalidCredentials`, **not** session-expired) | Not allowed — checkout-style action requires connectivity | API + mock |
 | Restore session | startup | Read persisted session | — (local) | — | — | — | Corrupt payload is discarded, not crashed on | Local | Mock |
 | Current user | bootstrap / profile | Refresh profile + role | `GET /auth/me` **[proposed]** | — | `user` object | Bearer | `401` → session expired | Cached session used | Mock / PENDING |
 | Sign out | `/profile` | Invalidate + clear | `POST /auth/logout` **[proposed]** | — | — | Bearer | Local credentials are cleared **even if** the server call fails | Local clear | Mock / PENDING |

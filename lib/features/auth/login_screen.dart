@@ -21,14 +21,17 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _isRegistering = false;
   bool _isLoading = false;
   String? _errorMessage;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -46,12 +49,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await ref
-          .read(sessionProvider.notifier)
-          .signIn(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
+      final sessionController = ref.read(sessionProvider.notifier);
+      if (_isRegistering) {
+        await sessionController.register(
+          fullName: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      } else {
+        await sessionController.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
       if (!mounted) return;
       context.go('/home');
     } catch (error) {
@@ -113,19 +123,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     Text(
-                      'Welcome Back',
+                      _isRegistering ? 'Create Account' : 'Welcome Back',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.h2,
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Sign in to your league account',
+                      _isRegistering
+                          ? 'Create your NaSCon league account'
+                          : 'Sign in to your league account',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxxl),
+                    if (_isRegistering) ...[
+                      CustomTextField(
+                        controller: _nameController,
+                        label: 'Full name',
+                        hintText: 'Your name',
+                        prefixIcon: Icons.person_outline_rounded,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.name],
+                        enabled: !_isLoading,
+                        validator: (value) {
+                          if (value == null || value.trim().length < 2) {
+                            return 'Enter at least 2 characters.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
                     CustomTextField(
                       controller: _emailController,
                       label: 'Email address',
@@ -147,7 +177,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textInputAction: TextInputAction.done,
                       autofillHints: const [AutofillHints.password],
                       enabled: !_isLoading,
-                      validator: AppValidators.password,
+                      validator: _isRegistering
+                          ? (value) {
+                              if (value == null || value.length < 8) {
+                                return 'Use at least 8 characters.';
+                              }
+                              if (value.length > 72) {
+                                return 'Password must be 72 characters or fewer.';
+                              }
+                              return null;
+                            }
+                          : AppValidators.password,
                       onFieldSubmitted: (_) => _submit(),
                     ),
                     if (_errorMessage != null) ...[
@@ -160,10 +200,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ],
                     const SizedBox(height: AppSpacing.xl),
                     CustomButton(
-                      text: 'Sign In',
+                      text: _isRegistering ? 'Create Account' : 'Sign In',
                       isLoading: _isLoading,
                       trailingIcon: Icons.arrow_forward_rounded,
                       onPressed: _submit,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => setState(() {
+                              _isRegistering = !_isRegistering;
+                              _errorMessage = null;
+                            }),
+                      child: Text(
+                        _isRegistering
+                            ? 'Already have an account? Sign in'
+                            : 'New to NaSCon? Create an account',
+                      ),
                     ),
                     if (showDemoAccounts) ...[
                       const SizedBox(height: AppSpacing.xl),

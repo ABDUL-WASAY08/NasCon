@@ -85,6 +85,57 @@ class MockAuthRepository implements AuthRepository {
 
   final SessionStore _storage;
   final MockBackend _backend;
+  final Map<String, User> _registeredUsers = {};
+  final Map<String, String> _registeredPasswords = {};
+
+  @override
+  Future<Session> register({
+    required String fullName,
+    required String email,
+    required String password,
+  }) async {
+    await _backend.tick();
+    _backend.requireOnline();
+    final normalizedEmail = email.trim().toLowerCase();
+    final alreadyExists =
+        MockData.demoAccounts.any(
+          (account) => account.email.toLowerCase() == normalizedEmail,
+        ) ||
+        _registeredUsers.containsKey(normalizedEmail);
+    if (alreadyExists) {
+      throw const AppException(
+        'An account with that email already exists.',
+        kind: AppErrorKind.conflict,
+        statusCode: 409,
+      );
+    }
+    if (fullName.trim().length < 2 ||
+        !normalizedEmail.contains('@') ||
+        password.length < 8) {
+      throw const AppException(
+        'Enter a name, valid email, and password of at least 8 characters.',
+        kind: AppErrorKind.validation,
+        statusCode: 400,
+      );
+    }
+
+    final user = User(
+      id: 'local-${DateTime.now().microsecondsSinceEpoch}',
+      fullName: fullName.trim(),
+      email: normalizedEmail,
+      role: UserRole.viewer,
+    );
+    _registeredUsers[normalizedEmail] = user;
+    _registeredPasswords[normalizedEmail] = password;
+    final session = Session(
+      accessToken: 'mock.viewer.${user.id}',
+      refreshToken: 'mock-refresh-token',
+      user: user,
+      expiresAt: DateTime.now().add(const Duration(hours: 12)),
+    );
+    await _storage.saveSession(session);
+    return session;
+  }
 
   @override
   Future<Session> signIn({
@@ -94,12 +145,16 @@ class MockAuthRepository implements AuthRepository {
     await _backend.tick();
     _backend.requireOnline();
 
+    final normalizedEmail = email.trim().toLowerCase();
     final account = _firstWhereOrNull(
       MockData.demoAccounts,
-      (a) => a.email.toLowerCase() == email.trim().toLowerCase(),
+      (a) => a.email.toLowerCase() == normalizedEmail,
     );
+    final registeredUser = _registeredUsers[normalizedEmail];
 
-    if (account == null || account.password != password) {
+    if ((account == null || account.password != password) &&
+        (registeredUser == null ||
+            _registeredPasswords[normalizedEmail] != password)) {
       throw const AppException(
         'Incorrect email or password.',
         kind: AppErrorKind.invalidCredentials,
@@ -107,10 +162,11 @@ class MockAuthRepository implements AuthRepository {
       );
     }
 
+    final user = account?.user ?? registeredUser!;
     final session = Session(
-      accessToken: 'mock.${account.user.role.wire}.${account.user.id}',
+      accessToken: 'mock.${user.role.wire}.${user.id}',
       refreshToken: 'mock-refresh-token',
-      user: account.user,
+      user: user,
       expiresAt: DateTime.now().add(const Duration(hours: 12)),
     );
     await _storage.saveSession(session);
