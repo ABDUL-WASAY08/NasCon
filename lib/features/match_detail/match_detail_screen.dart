@@ -433,7 +433,7 @@ class _FeaturedMerchandise extends StatelessWidget {
             children: [
               const SectionHeader(title: 'Featured Merchandise'),
               SizedBox(
-                height: 132,
+                height: 168,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: products.length,

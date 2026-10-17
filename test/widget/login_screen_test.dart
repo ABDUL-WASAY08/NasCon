@@ -8,6 +8,7 @@ import '../helpers/test_harness.dart';
 void main() {
   testWidgets('login shows inline validation for empty input', (tester) async {
     final container = testContainer();
+    setTestViewport(tester);
     await tester.pumpWidget(wrapScreen(const LoginScreen(), container));
     await tester.pumpAndSettle();
 
@@ -20,6 +21,7 @@ void main() {
 
   testWidgets('login validates email format', (tester) async {
     final container = testContainer();
+    setTestViewport(tester);
     await tester.pumpWidget(wrapScreen(const LoginScreen(), container));
     await tester.pumpAndSettle();
 
@@ -35,6 +37,7 @@ void main() {
 
   testWidgets('password visibility can be toggled', (tester) async {
     final container = testContainer();
+    setTestViewport(tester);
     await tester.pumpWidget(wrapScreen(const LoginScreen(), container));
     await tester.pumpAndSettle();
 
@@ -50,6 +53,7 @@ void main() {
 
   testWidgets('a demo account fills the form in mock mode', (tester) async {
     final container = testContainer();
+    setTestViewport(tester);
     await tester.pumpWidget(wrapScreen(const LoginScreen(), container));
     await tester.pumpAndSettle();
 

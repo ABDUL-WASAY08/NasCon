@@ -43,6 +43,10 @@ abstract final class ErrorMapper {
         return timeoutMessage;
       case AppErrorKind.unauthorized:
         return sessionExpiredMessage;
+      case AppErrorKind.invalidCredentials:
+        return error.message.isNotEmpty
+            ? error.message
+            : 'Incorrect email or password.';
       case AppErrorKind.forbidden:
         return forbiddenMessage;
       case AppErrorKind.server:

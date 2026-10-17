@@ -6,6 +6,10 @@ enum AppErrorKind {
   network,
   timeout,
   unauthorized,
+
+  /// Credentials were rejected by the identity endpoint. Distinct from
+  /// [unauthorized], which means an *existing* session is no longer valid.
+  invalidCredentials,
   forbidden,
   notFound,
   conflict,

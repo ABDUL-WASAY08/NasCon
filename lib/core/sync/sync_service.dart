@@ -87,15 +87,16 @@ class SyncService {
 
   /// Runs one synchronisation pass. Never throws for an individual action's
   /// failure — the result is reported instead.
+  ///
+  /// Single-flight: a caller that arrives while a pass is running receives the
+  /// same future rather than starting a second pass.
   Future<SyncSummary> syncNow() {
     final existing = _inFlight;
     if (existing != null) return existing;
 
-    final run = _run();
+    final run = _run().whenComplete(() => _inFlight = null);
     _inFlight = run;
-    return run.whenComplete(() {
-      _inFlight = null;
-    });
+    return run;
   }
 
   Future<SyncSummary> _run() async {

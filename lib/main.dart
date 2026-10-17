@@ -19,7 +19,7 @@ Future<void> main() async {
 
   final config = AppConfig.fromEnvironment();
 
-  final database = SqfliteLocalDatabase();
+  final database = createPlatformLocalDatabase();
   await database.open();
 
   final preferences = PreferencesService();

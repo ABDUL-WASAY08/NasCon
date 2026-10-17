@@ -15,7 +15,7 @@ import '../helpers/test_harness.dart';
 /// with no network and no platform channels.
 void main() {
   Future<void> pumpApp(WidgetTester tester, ProviderContainer container) async {
-    tester.view.physicalSize = const Size(400, 900);
+    tester.view.physicalSize = const Size(400, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);

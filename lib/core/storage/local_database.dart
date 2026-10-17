@@ -7,6 +7,26 @@ import 'package:sqflite/sqflite.dart';
 import '../../models/cart_item.dart';
 import '../../models/sync_queue_entry.dart';
 
+/// Creates the persistent store for the current platform.
+///
+/// sqflite has no web or desktop implementation, so anything other than
+/// Android/iOS falls back to an in-memory store rather than crashing at
+/// startup. On those targets the cart and offline queue are session-scoped —
+/// acceptable for previews, never for a real offline workflow.
+LocalDatabase createPlatformLocalDatabase() {
+  const mobile = {TargetPlatform.android, TargetPlatform.iOS};
+  if (!kIsWeb && mobile.contains(defaultTargetPlatform)) {
+    return SqfliteLocalDatabase();
+  }
+  if (kDebugMode) {
+    debugPrint(
+      '[storage] sqflite is unavailable on this target — using an in-memory '
+      'store. Offline queue and cart will not persist across restarts.',
+    );
+  }
+  return MemoryLocalDatabase();
+}
+
 /// A cached payload plus the time it was stored, so the UI can flag staleness.
 @immutable
 class CachedPayload {

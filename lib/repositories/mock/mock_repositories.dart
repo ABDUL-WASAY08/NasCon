@@ -102,7 +102,7 @@ class MockAuthRepository implements AuthRepository {
     if (account == null || account.password != password) {
       throw const AppException(
         'Incorrect email or password.',
-        kind: AppErrorKind.unauthorized,
+        kind: AppErrorKind.invalidCredentials,
         statusCode: 401,
       );
     }

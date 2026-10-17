@@ -1,14 +1,21 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:nescom/core/errors/error_mapper.dart';
 import 'package:nescom/features/fixtures/fixtures_screen.dart';
 import 'package:nescom/features/fixtures/widgets/match_card.dart';
 import 'package:nescom/repositories/mock/mock_repositories.dart';
 
 import '../helpers/test_harness.dart';
 
+/// A tall surface so every fixture card is built (the list is lazy).
+void _tallPhone(WidgetTester tester) =>
+    setTestViewport(tester, height: 2600);
+
 void main() {
   testWidgets('fixtures list renders every match by default', (tester) async {
     final container = testContainer();
+    _tallPhone(tester);
     await tester.pumpWidget(wrapScreen(const FixturesScreen(), container));
     await tester.pumpAndSettle();
 
@@ -17,10 +24,11 @@ void main() {
 
   testWidgets('the Live filter actually changes the list', (tester) async {
     final container = testContainer();
+    _tallPhone(tester);
     await tester.pumpWidget(wrapScreen(const FixturesScreen(), container));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Live'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Live'));
     await tester.pumpAndSettle();
 
     expect(find.byType(MatchCard), findsOneWidget);
@@ -31,10 +39,11 @@ void main() {
     tester,
   ) async {
     final container = testContainer();
+    _tallPhone(tester);
     await tester.pumpWidget(wrapScreen(const FixturesScreen(), container));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Upcoming'));
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Upcoming'));
     await tester.pumpAndSettle();
 
     // 4 scheduled + 1 postponed.
@@ -63,10 +72,8 @@ void main() {
     await tester.pumpWidget(wrapScreen(const FixturesScreen(), container));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('You are offline and no fixtures have been cached yet.'),
-      findsOneWidget,
-    );
+    // The repository's network failure is mapped to the user-facing message.
+    expect(find.text(ErrorMapper.offlineMessage), findsOneWidget);
     expect(find.text('Try again'), findsOneWidget);
   });
 }

@@ -70,7 +70,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final session = sessionState.value;
       if (session == null) {
-        return (atLogin || atSplash) ? null : AppRoutes.login;
+        // Not signed in: the only reachable screen is Login. Splash must not
+        // redirect to itself, or the app would never leave the spinner.
+        return atLogin ? null : AppRoutes.login;
       }
 
       if (atSplash || atLogin) return AppRoutes.home;

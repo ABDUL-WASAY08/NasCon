@@ -48,3 +48,18 @@ Widget wrapScreen(Widget child, ProviderContainer container) =>
         home: child,
       ),
     );
+
+/// Sizes the test surface.
+///
+/// The default 800x600 surface is shorter than most phone screens, which pushes
+/// controls off-screen and stops lazy lists from building every row.
+void setTestViewport(
+  WidgetTester tester, {
+  double width = 400,
+  double height = 1200,
+}) {
+  tester.view.physicalSize = Size(width, height);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}

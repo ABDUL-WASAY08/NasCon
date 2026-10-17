@@ -1,5 +1,5 @@
 name: nescom
-description: "Nescom — a modern Flutter app built on feature-first clean architecture."
+description: "NaSCon '26 — multi-sport league & club operations mobile app."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -13,7 +13,7 @@ dependencies:
 
   # --- UI & typography -----------------------------------------------------
   cupertino_icons: ^1.0.8
-  google_fonts: ^6.2.1
+  google_fonts: ^6.2.1 # Poppins (headings) / Inter (body) from the design system
   flutter_svg: ^2.0.10
 
   # --- Animation -----------------------------------------------------------
@@ -26,28 +26,41 @@ dependencies:
   # --- State management ----------------------------------------------------
   flutter_riverpod: ^2.6.1
 
+  # --- Routing -------------------------------------------------------------
+  go_router: ^17.5.0
+
   # --- Local storage -------------------------------------------------------
-  shared_preferences: ^2.3.3
+  shared_preferences: ^2.3.3 # preferences only — secrets go in secure storage
+  flutter_secure_storage: ^11.2.0
+  sqflite: ^2.4.2+1 # caches + the durable offline action queue
+  path: ^1.9.1
 
   # --- Networking ----------------------------------------------------------
   dio: ^5.7.0
-  go_router: ^17.5.0
-  flutter_secure_storage: ^11.2.0
   connectivity_plus: ^7.3.2
-  sqflite: ^2.4.2+1
-  path: ^1.9.1
-  uuid: ^4.6.0
-  pdf: ^3.12.0
-  printing: ^5.14.3
+
+  # --- Utilities -----------------------------------------------------------
+  uuid: ^4.6.0 # stable client action ids (idempotency keys)
+  intl: ^0.20.2
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
+
+  # --- PDF receipts --------------------------------------------------------
+  pdf: ^3.12.0
+  printing: ^5.14.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  sqflite_common_ffi: ^2.4.0+3
+  sqflite_common_ffi: ^2.4.0+3 # optional native SQLite for integration tests
+
+# `pdf` 3.12 pins `archive >=3.4.0 <4.1.0`, while `image` 4.11 (its own
+# transitive dep) calls an archive API introduced after that range — the two
+# cannot resolve together. `image` 4.3.0 satisfies pdf and compiles; the
+# override is removed once pdf >=3.13 becomes usable on this Dart SDK.
+dependency_overrides:
+  image: 4.3.0
 
 flutter:
   uses-material-design: true

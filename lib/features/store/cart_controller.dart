@@ -13,10 +13,15 @@ import '../../repositories/repository_providers.dart';
 /// recomputed anywhere else.
 class CartController extends StateNotifier<List<CartItem>> {
   CartController(this._database) : super(const []) {
-    _restore();
+    _initialLoad = _restore();
   }
 
   final LocalDatabase _database;
+
+  /// Completes when the persisted cart has been read. Every mutation awaits it
+  /// first, so a load that resolves late can never clobber a user's change.
+  late final Future<void> _initialLoad;
+
   bool _loaded = false;
 
   bool get isLoaded => _loaded;
@@ -36,6 +41,7 @@ class CartController extends StateNotifier<List<CartItem>> {
     ProductVariant? variant,
     int quantity = 1,
   }) async {
+    await _initialLoad;
     if (quantity < 1) return null;
 
     final variantId = variant?.id;
@@ -80,6 +86,7 @@ class CartController extends StateNotifier<List<CartItem>> {
   /// Returns `false` when the requested quantity is above the known stock, so
   /// the UI can explain why nothing changed.
   Future<bool> setQuantity(String lineId, int quantity) async {
+    await _initialLoad;
     final index = state.indexWhere((item) => item.lineId == lineId);
     if (index < 0) return false;
     final item = state[index];
@@ -108,11 +115,13 @@ class CartController extends StateNotifier<List<CartItem>> {
   }
 
   Future<void> remove(String lineId) async {
+    await _initialLoad;
     state = state.where((item) => item.lineId != lineId).toList();
     await _persist();
   }
 
   Future<void> clear() async {
+    await _initialLoad;
     state = const [];
     await _persist();
   }

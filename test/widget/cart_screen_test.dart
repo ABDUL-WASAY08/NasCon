@@ -18,6 +18,7 @@ const _jersey = Product(
 void main() {
   testWidgets('an empty cart shows the empty state', (tester) async {
     final container = testContainer();
+    setTestViewport(tester, height: 900);
     await tester.pumpWidget(wrapScreen(const CartScreen(), container));
     await tester.pumpAndSettle();
 
@@ -28,6 +29,7 @@ void main() {
     tester,
   ) async {
     final container = testContainer();
+    setTestViewport(tester, height: 900);
     await container.read(cartProvider.notifier).addProduct(_jersey, quantity: 1);
 
     await tester.pumpWidget(wrapScreen(const CartScreen(), container));
@@ -44,6 +46,7 @@ void main() {
 
   testWidgets('quantity cannot exceed the available stock', (tester) async {
     final container = testContainer();
+    setTestViewport(tester, height: 900);
     await container.read(cartProvider.notifier).addProduct(_jersey, quantity: 3);
 
     await tester.pumpWidget(wrapScreen(const CartScreen(), container));
@@ -52,7 +55,7 @@ void main() {
     expect(find.text('Maximum available quantity reached.'), findsOneWidget);
 
     final increase = tester.widget<IconButton>(
-      find.byTooltip('Increase quantity'),
+      find.widgetWithIcon(IconButton, Icons.add_rounded),
     );
     expect(increase.onPressed, isNull);
   });
@@ -61,6 +64,7 @@ void main() {
     tester,
   ) async {
     final container = testContainer();
+    setTestViewport(tester, height: 900);
     await container.read(cartProvider.notifier).addProduct(_jersey);
 
     await tester.pumpWidget(wrapScreen(const CartScreen(), container));

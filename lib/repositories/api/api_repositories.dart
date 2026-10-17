@@ -90,10 +90,25 @@ class ApiAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final json = await _client.post(
-      ApiRoutes.login,
-      body: {'email': email.trim(), 'password': password},
-    );
+    final Map<String, dynamic> json;
+    try {
+      json = await _client.post(
+        ApiRoutes.login,
+        body: {'email': email.trim(), 'password': password},
+      );
+    } on AppException catch (error) {
+      // A 401 from the identity endpoint means bad credentials — not an
+      // expired session.
+      if (error.kind == AppErrorKind.unauthorized) {
+        throw AppException(
+          'Incorrect email or password.',
+          kind: AppErrorKind.invalidCredentials,
+          statusCode: error.statusCode,
+        );
+      }
+      rethrow;
+    }
+
     final session = Session.fromJson(json);
     if (session.accessToken.isEmpty) {
       throw const AppException(
