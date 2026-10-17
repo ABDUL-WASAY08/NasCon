@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/models/activity.dart';
+import '../../../../models/activity.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/widgets.dart';
 
-/// One row in the recent-activity list, with a status-coloured badge.
+/// One row in the recent-activity list: leading icon, title with
+/// subtitle/timestamp, and a right-aligned value + status chip.
 class ActivityTile extends StatelessWidget {
   const ActivityTile({super.key, required this.activity});
 
@@ -39,8 +40,8 @@ class ActivityTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               color: color.withValues(alpha: 0.12),
@@ -58,9 +59,9 @@ class ActivityTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.button,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
-                  activity.subtitle,
+                  '${activity.subtitle} • ${_relativeTime(activity.timestamp)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyles.bodySmall.copyWith(
@@ -76,10 +77,10 @@ class ActivityTile extends StatelessWidget {
             children: [
               if (activity.amount != null)
                 Text(
-                  '\$${activity.amount!.toStringAsFixed(2)}',
+                  '\$${_formatAmount(activity.amount!)}',
                   style: AppTextStyles.button,
                 ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.sm,
@@ -103,4 +104,24 @@ class ActivityTile extends StatelessWidget {
       ),
     );
   }
+}
+
+String _relativeTime(DateTime timestamp) {
+  final diff = DateTime.now().difference(timestamp);
+  if (diff.inMinutes < 1) return 'Just now';
+  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+  if (diff.inHours < 24) return '${diff.inHours}h ago';
+  if (diff.inDays == 1) return 'Yesterday';
+  return '${diff.inDays}d ago';
+}
+
+String _formatAmount(double amount) {
+  final parts = amount.toStringAsFixed(2).split('.');
+  final digits = parts.first;
+  final buffer = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(',');
+    buffer.write(digits[i]);
+  }
+  return '${buffer.toString()}.${parts.last}';
 }

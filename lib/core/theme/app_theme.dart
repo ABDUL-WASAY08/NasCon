@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_constants.dart';
 import 'app_colors.dart';
 import 'app_text_styles.dart';
 
@@ -8,16 +9,20 @@ import 'app_text_styles.dart';
 abstract final class AppTheme {
   static ThemeData get light => _build(
     scheme: _lightScheme,
+    semantic: AppSemanticColors.light,
     background: AppColors.lightBackground,
     surface: AppColors.lightSurface,
     border: AppColors.lightBorder,
+    brightness: Brightness.light,
   );
 
   static ThemeData get dark => _build(
     scheme: _darkScheme,
+    semantic: AppSemanticColors.dark,
     background: AppColors.darkBackground,
     surface: AppColors.darkSurface,
     border: AppColors.darkBorder,
+    brightness: Brightness.dark,
   );
 
   // ---------------------------------------------------------------------------
@@ -62,18 +67,24 @@ abstract final class AppTheme {
   // ---------------------------------------------------------------------------
   static ThemeData _build({
     required ColorScheme scheme,
+    required AppSemanticColors semantic,
     required Color background,
     required Color surface,
     required Color border,
+    required Brightness brightness,
   }) {
     final textTheme = _textTheme().apply(
       bodyColor: scheme.onSurface,
       displayColor: scheme.onSurface,
     );
+    final inputBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.input),
+      borderSide: BorderSide(color: border),
+    );
 
     return ThemeData(
       useMaterial3: true,
-      brightness: scheme.brightness,
+      brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
       canvasColor: background,
@@ -84,6 +95,8 @@ abstract final class AppTheme {
       textTheme: textTheme,
       iconTheme: IconThemeData(color: scheme.onSurface),
       dividerTheme: DividerThemeData(color: border, thickness: 1, space: 1),
+      extensions: <ThemeExtension<dynamic>>[semantic],
+      visualDensity: VisualDensity.standard,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: SmoothPageTransitionsBuilder(),
@@ -107,10 +120,91 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: surface,
-        hintStyle: AppTextStyles.input.copyWith(
-          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.lg,
         ),
-        errorStyle: AppTextStyles.caption.copyWith(color: scheme.error),
+        hintStyle: AppTextStyles.input.copyWith(color: semantic.muted),
+        errorStyle: AppTextStyles.helper.copyWith(color: scheme.error),
+        border: inputBorder,
+        enabledBorder: inputBorder,
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: BorderSide(color: scheme.primary, width: 1.6),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: BorderSide(color: scheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          borderSide: BorderSide(color: scheme.error, width: 1.6),
+        ),
+        disabledBorder: inputBorder,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sheet),
+        ),
+        titleTextStyle: AppTextStyles.h3.copyWith(color: scheme.onSurface),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: surface,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppRadius.sheet),
+          ),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: brightness == Brightness.dark
+            ? AppColors.darkSurface
+            : AppColors.lightTextPrimary,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: Colors.white,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.button),
+        ),
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: semantic.neutralContainer,
+        side: BorderSide(color: border),
+        labelStyle: AppTextStyles.status.copyWith(
+          color: scheme.onSurfaceVariant,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.pill),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, AppSizes.buttonHeight),
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          textStyle: AppTextStyles.primaryButton,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.button),
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, AppSizes.buttonHeight),
+          foregroundColor: scheme.onSurface,
+          textStyle: AppTextStyles.secondaryButton,
+          side: BorderSide(color: border),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.button),
+          ),
+        ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -118,23 +212,26 @@ abstract final class AppTheme {
           textStyle: AppTextStyles.label,
         ),
       ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: scheme.primary,
+      ),
     );
   }
 
   static TextTheme _textTheme() => TextTheme(
-    displayLarge: AppTextStyles.h1,
+    displayLarge: AppTextStyles.display,
     displayMedium: AppTextStyles.h1,
     displaySmall: AppTextStyles.h2,
     headlineLarge: AppTextStyles.h1,
     headlineMedium: AppTextStyles.h2,
     headlineSmall: AppTextStyles.h3,
     titleLarge: AppTextStyles.h3,
-    titleMedium: AppTextStyles.button,
+    titleMedium: AppTextStyles.primaryButton,
     titleSmall: AppTextStyles.label,
     bodyLarge: AppTextStyles.bodyLarge,
     bodyMedium: AppTextStyles.bodyMedium,
     bodySmall: AppTextStyles.bodySmall,
-    labelLarge: AppTextStyles.button,
+    labelLarge: AppTextStyles.primaryButton,
     labelMedium: AppTextStyles.label,
     labelSmall: AppTextStyles.caption,
   );

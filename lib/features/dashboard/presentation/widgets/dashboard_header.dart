@@ -1,125 +1,204 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/models/user.dart';
+import '../../../../models/user.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/widgets.dart';
-import '../../data/dashboard_mock_data.dart';
 
-/// The dashboard's welcome header: greeting + name and a row of quick actions,
-/// laid over the brand gradient.
+/// The dashboard's header: profile avatar (with an active-status badge), the
+/// greeting, a notification bell carrying a badge, and a settings action.
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
     super.key,
     required this.user,
     required this.greeting,
-    required this.onQuickAction,
+    required this.subtitle,
+    required this.notificationCount,
+    required this.onNotifications,
+    required this.onSettings,
+    required this.onAvatarTap,
   });
 
   final User user;
   final String greeting;
-  final ValueChanged<QuickAction> onQuickAction;
+  final String subtitle;
+  final int notificationCount;
+  final VoidCallback onNotifications;
+  final VoidCallback onSettings;
+  final VoidCallback onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
-    return CustomCard(
-      gradient: AppColors.primaryGradient,
-      borderColor: Colors.transparent,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: _AvatarWithStatus(initials: user.initials),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      greeting,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: Colors.white.withValues(alpha: 0.85),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      user.fullName,
-                      style: AppTextStyles.h3.copyWith(color: Colors.white),
-                    ),
-                  ],
-                ),
+              Text(
+                greeting,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.h3,
               ),
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.18),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.35),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    user.initials,
-                    style: AppTextStyles.button.copyWith(color: Colors.white),
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Row(
-            children: [
-              for (final action in kQuickActions)
-                Expanded(
-                  child: _QuickActionButton(
-                    action: action,
-                    onTap: () => onQuickAction(action),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
+        ),
+        _HeaderIconButton(
+          icon: Icons.notifications_none_rounded,
+          tooltip: 'Notifications',
+          badgeCount: notificationCount,
+          onTap: onNotifications,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        _HeaderIconButton(
+          icon: Icons.settings_outlined,
+          tooltip: 'Settings',
+          onTap: onSettings,
+        ),
+      ],
     );
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
-  const _QuickActionButton({required this.action, required this.onTap});
+class _AvatarWithStatus extends StatelessWidget {
+  const _AvatarWithStatus({required this.initials});
 
-  final QuickAction action;
-  final VoidCallback onTap;
+  final String initials;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Column(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: Colors.white.withValues(alpha: 0.18),
-              ),
-              child: Icon(action.icon, color: Colors.white, size: 22),
+    final theme = Theme.of(context);
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 54,
+          height: 54,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: AppColors.primaryGradient,
             ),
-            const SizedBox(height: 6),
-            Text(
-              action.label,
-              style: AppTextStyles.caption.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
+          ),
+          child: Center(
+            child: Text(
+              initials,
+              style: AppTextStyles.button.copyWith(color: Colors.white),
             ),
-          ],
+          ),
         ),
-      ),
+        Positioned(
+          right: 2,
+          bottom: 2,
+          child: Container(
+            width: 16,
+            height: 16,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.scaffoldBackgroundColor,
+            ),
+            child: Center(
+              child: Container(
+                width: 11,
+                height: 11,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.success,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.badgeCount = 0,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+  final int badgeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final borderRadius = BorderRadius.circular(14);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: theme.cardColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: borderRadius,
+            side: BorderSide(color: scheme.outline),
+          ),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: borderRadius,
+            child: SizedBox(
+              width: 46,
+              height: 46,
+              child: Icon(icon, size: 22, color: scheme.onSurface),
+            ),
+          ),
+        ),
+        if (badgeCount > 0)
+          Positioned(
+            top: 5,
+            right: 5,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: AppColors.error,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: theme.scaffoldBackgroundColor,
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                '$badgeCount',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.caption.copyWith(
+                  color: Colors.white,
+                  fontSize: 9,
+                  height: 1.3,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

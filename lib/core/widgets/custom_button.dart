@@ -130,7 +130,7 @@ class _CustomButtonState extends State<CustomButton> {
               onTapCancel: () => setState(() => _pressed = false),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Center(child: content),
+                child: widget.fullWidth ? Center(child: content) : content,
               ),
             ),
           ),
