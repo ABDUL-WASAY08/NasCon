@@ -1,0 +1,44 @@
+name: nescom
+description: "Nescom — a modern Flutter app built on feature-first clean architecture."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- UI & typography -----------------------------------------------------
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10
+
+  # --- Animation -----------------------------------------------------------
+  animate_do: ^3.3.4
+
+  # --- Navigation & sliders ------------------------------------------------
+  curved_navigation_bar: ^1.0.6
+  smooth_page_indicator: ^1.2.0
+
+  # --- State management ----------------------------------------------------
+  flutter_riverpod: ^2.6.1
+
+  # --- Local storage -------------------------------------------------------
+  shared_preferences: ^2.3.3
+
+  # --- Networking ----------------------------------------------------------
+  dio: ^5.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the Flutter splash background (deep black) so the OS launch
+         frame and the animated intro are seamless. -->
+    <color name="splash_background">#FF0B0B0B</color>
+    <color name="splash_gold">#FFD4AF37</color>
+</resources>
