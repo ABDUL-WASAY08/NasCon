@@ -99,6 +99,20 @@ class ApiClient {
     return _asObject(data);
   }
 
+  Future<Map<String, dynamic>> postMultipart(
+    String path, {
+    required FormData formData,
+  }) async {
+    final data = await _send(
+      () => _dio.post<dynamic>(
+        path,
+        data: formData,
+        options: Options(contentType: Headers.multipartFormDataContentType),
+      ),
+    );
+    return _asObject(data);
+  }
+
   Future<Map<String, dynamic>> put(
     String path, {
     Object? body,
@@ -215,9 +229,13 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Never attach credentials to a login/refresh call.
     final token = await _client._currentToken();
-    if (token != null && token.isNotEmpty) {
+    final path = options.path;
+    final isPublicAuthRequest =
+        path.endsWith('/auth/login') ||
+        path.endsWith('/auth/register') ||
+        path.endsWith('/auth/google');
+    if (!isPublicAuthRequest && token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
@@ -236,7 +254,10 @@ class _SafeLogInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
     developer.log(
       '← ${response.statusCode} ${response.requestOptions.path}',
       name: 'api',
@@ -246,10 +267,7 @@ class _SafeLogInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    developer.log(
-      '✕ ${err.type.name} ${err.requestOptions.path}',
-      name: 'api',
-    );
+    developer.log('✕ ${err.type.name} ${err.requestOptions.path}', name: 'api');
     handler.next(err);
   }
 }

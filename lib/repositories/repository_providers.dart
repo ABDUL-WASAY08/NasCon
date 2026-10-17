@@ -5,6 +5,7 @@ import '../core/connectivity/connectivity_service.dart';
 import '../core/permissions/app_permissions.dart';
 import '../core/storage/local_database.dart';
 import '../core/storage/secure_storage_service.dart';
+import '../core/services/api_service.dart';
 import '../core/sync/sync_adapter.dart';
 import '../core/sync/sync_service.dart';
 import '../models/session.dart';
@@ -29,7 +30,9 @@ final connectivityStatusProvider = StreamProvider<bool>(
   (ref) => ref.watch(connectivityServiceProvider).onStatusChange,
 );
 
-final appConfigProvider = Provider<AppConfig>((ref) => AppConfig.fromEnvironment());
+final appConfigProvider = Provider<AppConfig>(
+  (ref) => AppConfig.fromEnvironment(),
+);
 
 final localDatabaseProvider = Provider<LocalDatabase>(
   (ref) => MemoryLocalDatabase(),
@@ -54,6 +57,10 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   // instead surfaced as `AppErrorKind.unauthorized` and handled by the UI.
   return ApiClient(config: config, accessToken: store.accessToken);
 });
+
+final apiServiceProvider = Provider<ApiService>(
+  (ref) => ApiService(client: ref.watch(apiClientProvider)),
+);
 
 // -----------------------------------------------------------------------------
 // Repositories — mock or production, selected by configuration
@@ -201,7 +208,9 @@ final sessionProvider =
     );
 
 /// Convenience: the signed-in user, or `null`.
-final currentUserProvider = Provider((ref) => ref.watch(sessionProvider).value?.user);
+final currentUserProvider = Provider(
+  (ref) => ref.watch(sessionProvider).value?.user,
+);
 
 /// Central capability gate derived from the signed-in user's role.
 final permissionsProvider = Provider<AppPermissions>(
@@ -260,6 +269,7 @@ class SyncQueueController
 }
 
 final syncQueueProvider =
-    StateNotifierProvider<SyncQueueController, AsyncValue<List<SyncQueueEntry>>>(
-      (ref) => SyncQueueController(ref.watch(syncServiceProvider)),
-    );
+    StateNotifierProvider<
+      SyncQueueController,
+      AsyncValue<List<SyncQueueEntry>>
+    >((ref) => SyncQueueController(ref.watch(syncServiceProvider)));

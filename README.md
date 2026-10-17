@@ -1,17 +1,41 @@
-# nescom
+# NaSCon '26
 
-A new Flutter project.
+Flutter client for NaSCon multi-sport league and club operations. The React/Vite
+demo in `dashboard/` is a separate project; the app in `lib/` is Flutter.
 
-## Getting Started
+## Run the app
 
-This project is a starting point for a Flutter application.
+```powershell
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+The app uses mock data by default. To connect it to the Express API, start the
+backend (see [`backend/README.md`](./backend/README.md)) and set the API URL:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```powershell
+flutter run --dart-define=USE_MOCK_BACKEND=false --dart-define=API_BASE_URL=http://10.0.2.2:5000/api
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+On a physical device, use your computer's LAN address instead of `10.0.2.2`.
+
+## Project layout
+
+```text
+lib/
+  app/             App root and routes
+  core/            Theme, configuration, networking, storage, shared widgets
+  features/        Authentication, fixtures, standings, store, profile, etc.
+  models/          Typed API and application models
+  repositories/    Mock and API data sources
+test/              Unit, widget, and integration tests
+backend/           Express API
+dashboard/         Separate React/Vite demo
+```
+
+## Validate
+
+```powershell
+flutter analyze
+flutter test
+```

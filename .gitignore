@@ -46,3 +46,11 @@ app.*.map.json
 
 # Local agent tooling
 .commandcode/
+
+# Backend environment and generated files
+.env
+.env.*
+!.env.example
+backend/node_modules/
+backend/coverage/
+backend/*.log

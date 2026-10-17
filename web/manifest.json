@@ -1,11 +1,11 @@
 {
-    "name": "BookEase AI",
-    "short_name": "BookEase",
+    "name": "NaSCon '26",
+    "short_name": "NaSCon",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F8FAFC",
     "theme_color": "#0F172A",
-    "description": "Manage your bookings with BookEase AI.",
+    "description": "NaSCon '26 multi-sport league and club operations.",
     "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
